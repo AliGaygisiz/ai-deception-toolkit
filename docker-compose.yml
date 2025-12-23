@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  ai-deception-toolkit:
+    build: .
+    container_name: ai-deception-toolkit
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+    volumes:
+      # Mount the project directory for smoother development (optional in prod)
+      # In production Dokploy, this usually builds from git, so volumes might not be needed
+      # but they are helpful if you run `docker-compose up` locally.
+      - ./:/app
+    environment:
+      - STREAMLIT_SERVER_MAX_UPLOAD_SIZE=10
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 512M
