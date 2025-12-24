@@ -42,12 +42,36 @@ def main():
 
         st.divider()
 
-        mode = st.radio(
-            "Toolkit Module",
-            ["📊 The Scanner", "📷 Humanizer", "🎭 Faker"],
-            index=0,
-            label_visibility="collapsed",
+        if "mode" not in st.session_state:
+            st.session_state.mode = "📊 The Scanner"
+
+        def set_mode(m):
+            st.session_state.mode = m
+
+        st.caption("Toolkit Module")
+        
+        st.button(
+            "📊 The Scanner", 
+            on_click=set_mode, args=("📊 The Scanner",),
+            type="primary" if st.session_state.mode == "📊 The Scanner" else "secondary",
+            use_container_width=True
         )
+        
+        st.button(
+            "📷 Humanizer", 
+            on_click=set_mode, args=("📷 Humanizer",),
+            type="primary" if st.session_state.mode == "📷 Humanizer" else "secondary",
+            use_container_width=True
+        )
+        
+        st.button(
+            "🎭 Faker", 
+            on_click=set_mode, args=("🎭 Faker",),
+            type="primary" if st.session_state.mode == "🎭 Faker" else "secondary",
+            use_container_width=True
+        )
+
+        mode = st.session_state.mode
 
         st.divider()
 
@@ -58,10 +82,6 @@ def main():
         st.divider()
 
         st.info("🔒 Privacy: All processing is in RAM. No uploads are stored.")
-
-        st.divider()
-        st.markdown("**System Status**: `ONLINE`")
-        st.progress(100)
 
     # --- State Management ---
     if "processed_image" not in st.session_state:
@@ -170,10 +190,17 @@ Innoculates a real human photo with synthetic noise patterns, causing it to be f
 
         # Upload takes precedence, clear sample
         st.session_state.selected_sample = None
-        original_array, _ = convert_to_rgb(uploaded_file)
+        original_array, _, was_resized = convert_to_rgb(uploaded_file)
+        if was_resized and st.session_state.get("toast_shown_id") != file_signature:
+             st.toast("High-Res Image detected. Optimized to 1024px for stability.", icon="⚠️")
+             st.session_state.toast_shown_id = file_signature
         st.session_state.input_filename = os.path.splitext(uploaded_file.name)[0]
     elif has_sample:
-        original_array, _ = convert_to_rgb(st.session_state.selected_sample)
+        sample_id = st.session_state.selected_sample
+        original_array, _, was_resized = convert_to_rgb(sample_id)
+        if was_resized and st.session_state.get("toast_shown_id") != sample_id:
+             st.toast("High-Res Sample optimized.", icon="⚠️")
+             st.session_state.toast_shown_id = sample_id
         st.session_state.input_filename = os.path.splitext(
             os.path.basename(st.session_state.selected_sample)
         )[0]
@@ -183,12 +210,6 @@ Innoculates a real human photo with synthetic noise patterns, causing it to be f
     if original_array is None:
         st.error("Error loading image. Please try another file.")
         return
-
-    # Check size
-    if original_array.shape[0] > 1024 or original_array.shape[1] > 1024:
-        st.toast(
-            "High-Res Image detected. Optimized to 1024px for stability.", icon="⚠️"
-        )
 
     # --- MODE: DASHBOARD ---
     if mode == "📊 The Scanner":

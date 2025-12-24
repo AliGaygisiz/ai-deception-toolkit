@@ -66,9 +66,11 @@ def convert_to_rgb(image_file):
         image = Image.open(image_file).convert('RGB')
         
         max_dim = 4096
+        was_resized = False
         if image.width > max_dim or image.height > max_dim:
+            was_resized = True
             image.thumbnail((max_dim, max_dim), Image.LANCZOS)
             
-        return np.array(image), image
+        return np.array(image), image, was_resized
     except Exception:
-        return None, None
+        return None, None, False
